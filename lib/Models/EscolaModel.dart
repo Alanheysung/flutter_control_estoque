@@ -4,6 +4,13 @@ class Escola {
   final String endereco;
   final String telefone;
   final int capacidadeAlunos;
+  final int faixaIdade;
+  final String periodo;
+  final int nRefeicoesOfertados;
+  final String modalidade;
+  final String descricao;
+  final String referencialNutricional;
+
 
   Escola({
     required this.id,
@@ -11,6 +18,12 @@ class Escola {
     required this.endereco,
     required this.telefone,
     required this.capacidadeAlunos,
+    required this.descricao,
+    required this.modalidade,
+    required this.faixaIdade,
+    required this.nRefeicoesOfertados,
+    required this.periodo,
+    required this.referencialNutricional,
   });
 
   // Conversão para JSON
@@ -21,6 +34,12 @@ class Escola {
       'endereco': endereco,
       'telefone': telefone,
       'capacidadeAlunos': capacidadeAlunos,
+      'descricao': descricao,
+      'modalidade': modalidade,
+      'faixaIdade': faixaIdade,
+      'nRefeicoesOfertadas': nRefeicoesOfertados,
+      'periodo': periodo,
+      'referencialNutricional': referencialNutricional,
     };
   }
 
@@ -32,6 +51,12 @@ class Escola {
       endereco: json['endereco'],
       telefone: json['telefone'],
       capacidadeAlunos: json['capacidadeAlunos'],
+      descricao: json['descricao'],
+      modalidade: json['modalidade'],
+      faixaIdade: json['faixaIdade'],
+      nRefeicoesOfertados: json['nRefeicoesOfertados'],
+      periodo: json['periodo'],
+      referencialNutricional: json['referencipalNutricional'],
     );
   }
 }
