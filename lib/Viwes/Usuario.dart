@@ -23,10 +23,9 @@ class _UsuarioScreenState extends State<UsuarioScreen> {
 
 
   final List<String> profissoes = [
-    'Caminhoneiro',
     'Cozinheira',
     'Nutricionista',
-    'Diretora'
+    'Gestora'
   ];
 
   final List<String> escolas = [

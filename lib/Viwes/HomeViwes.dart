@@ -38,12 +38,12 @@ class _HomeViewsState extends State<HomeViews> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildButton('Escola', Escola(), Icons.school),
-                  _buildButton('Cardápio', Cardapio(), Icons.restaurant_menu),
-                  _buildButton('Referências Nutricionais', ReferenciasNutricionais(), Icons.library_books),
-                  _buildButton('Preparação', Preparacao(), Icons.kitchen),
-                  _buildButton('Alimentos', CadastroAlimentos(), Icons.fastfood),
-                  _buildButton('Refeição', Refeicao(), Icons.restaurant),
+                  _buildButton('Escola', EscolaView(), Icons.school),
+                  _buildButton('Cardápio', CadastrarCardapio(), Icons.restaurant_menu),
+                  _buildButton('Referências Nutricionais', ReferenciasNutricionaisTela(), Icons.library_books),
+                  _buildButton('Preparação', PreparacaoPage(), Icons.kitchen),
+                  _buildButton('Alimentos', AlimentosScreen(), Icons.fastfood),
+                  _buildButton('Refeição', RefeicoesPage(), Icons.restaurant),
                   _buildButton('Relatório', Relatorio(), Icons.analytics),
                   _buildButton('Usuário', UsuarioScreen(), Icons.person),
                 ],
