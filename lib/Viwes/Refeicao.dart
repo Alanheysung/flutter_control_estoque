@@ -117,23 +117,23 @@ class _RefeicoesPageState extends State<RefeicoesPage> {
                       DataCell(Text(refeicao.descricao)),
                       DataCell(Text(refeicao.horario.toString().substring(11, 16))),
                       DataCell(Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () {
-                              _editarRefeicao(refeicao);
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                controller.removerRefeicao(refeicao.nome);
-                              });
-                            },
-                          ),
-                        ],
-                      )),
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.edit),
+                    onPressed: () {
+                      _editarRefeicao(refeicao);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      // Exibe o diálogo de confirmação
+                      _confirmarRemocao(refeicao);
+                    },
+                  ),
+                ],
+              ))
+
                     ]);
                   }).toList(),
                 ),
@@ -193,4 +193,35 @@ class _RefeicoesPageState extends State<RefeicoesPage> {
       },
     );
   }
+
+void _confirmarRemocao(Refeicao refeicao) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Confirmar Exclusão'),
+        content: Text('Você tem certeza que deseja excluir a refeição "${refeicao.nome}"?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Fecha o diálogo sem excluir
+            },
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                controller.removerRefeicao(refeicao.nome); // Remove a refeição
+              });
+              Navigator.of(context).pop(); // Fecha o diálogo
+            },
+            child: Text('Confirmar'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 }

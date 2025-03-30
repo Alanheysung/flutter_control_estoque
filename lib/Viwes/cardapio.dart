@@ -473,11 +473,36 @@ Widget _buildTabelaCardapios() {
                   IconButton(
                     icon: Icon(Icons.delete),
                     onPressed: () {
-                      setState(() {
-                        // Exclui o cardápio
-                        cardapiosCadastrados.remove(cardapio);
-                        cardapiosVisiveis = List.from(cardapiosCadastrados); // Atualiza a lista visível
-                      });
+                      // Exibe o diálogo de confirmação
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: Text('Confirmar Exclusão'),
+                            content: Text('Você tem certeza que deseja excluir este cardápio?'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: Text('Cancelar'),
+                                onPressed: () {
+                                  // Fecha o diálogo sem excluir
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: Text('Confirmar'),
+                                onPressed: () {
+                                  setState(() {
+                                    // Exclui o cardápio
+                                    cardapiosCadastrados.remove(cardapio);
+                                    cardapiosVisiveis = List.from(cardapiosCadastrados); // Atualiza a lista visível
+                                  });
+                                  Navigator.of(context).pop(); // Fecha o diálogo após a exclusão
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
                     },
                   ),
                 ],

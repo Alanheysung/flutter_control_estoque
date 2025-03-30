@@ -26,7 +26,7 @@ class _EscolaViewState extends State<EscolaView> {
 
   int? _idEscolaAtualizar;
 
-  final List<String> _periodos = ['Integral', 'Parcial'];
+  final List<String> _periodos = ['Manhã','Tarde','Integral', 'Parcial'];
   final List<String> _modalidades = ['Creche', 'Pré-escola', 'Ensino Fundamental', 'EJA'];
   final List<String> _referenciaisNutricionais = ['20%', '25%', '30%', '35%'];
   final List<int> _nRefeicoes = [1, 2, 3, 4];
@@ -34,7 +34,7 @@ class _EscolaViewState extends State<EscolaView> {
   void _adicionarEscola() {
     if (_formKey.currentState!.validate()) {
       final escola = Escola(
-        id: DateTime.now().millisecondsSinceEpoch,
+        id: _idEscolaAtualizar ?? DateTime.now().millisecondsSinceEpoch,
         nome: _nomeController.text,
         endereco: _enderecoController.text,
         telefone: _telefoneController.text,
@@ -47,12 +47,20 @@ class _EscolaViewState extends State<EscolaView> {
         referencialNutricional: _referencialNutricionalSelecionado!,
       );
 
-      _controller.adicionarEscola(escola);
+      if (_idEscolaAtualizar != null) {
+        // Atualizar a escola
+        _controller.atualizarEscola(_idEscolaAtualizar!, escola);
+      } else {
+        // Adicionar a nova escola
+        _controller.adicionarEscola(escola);
+      }
 
-      setState(() {});
+      setState(() {
+        _idEscolaAtualizar = null; // Limpar o campo de atualização
+      });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Escola adicionada com sucesso!')),
+        SnackBar(content: Text(_idEscolaAtualizar != null ? 'Escola atualizada com sucesso!' : 'Escola adicionada com sucesso!')),
       );
       _limparCampos();
     }
@@ -71,7 +79,6 @@ class _EscolaViewState extends State<EscolaView> {
       _modalidadeSelecionada = null;
       _referencialNutricionalSelecionado = null;
       _nRefeicoesSelecionado = null;
-      _idEscolaAtualizar = null;
     });
   }
 
@@ -106,6 +113,22 @@ class _EscolaViewState extends State<EscolaView> {
         );
       },
     );
+  }
+
+  void _editarEscola(Escola escola) {
+    setState(() {
+      _idEscolaAtualizar = escola.id;
+      _nomeController.text = escola.nome;
+      _enderecoController.text = escola.endereco;
+      _telefoneController.text = escola.telefone;
+      _capacidadeController.text = escola.capacidadeAlunos.toString();
+      _faixaIdadeController.text = escola.faixaIdade;
+      _periodoSelecionado = escola.periodo;
+      _modalidadeSelecionada = escola.modalidade;
+      _referencialNutricionalSelecionado = escola.referencialNutricional;
+      _nRefeicoesSelecionado = escola.nRefeicoesOfertados;
+      _descricaoController.text = escola.descricao;
+    });
   }
 
   @override
@@ -271,7 +294,7 @@ class _EscolaViewState extends State<EscolaView> {
                       SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _adicionarEscola,
-                        child: Text('Adicionar Escola'),
+                        child: Text(_idEscolaAtualizar != null ? 'Atualizar Escola' : 'Adicionar Escola'),
                       ),
                     ],
                   ),
@@ -302,11 +325,13 @@ class _EscolaViewState extends State<EscolaView> {
                     DataColumn(label: Text('Período')),
                     DataColumn(label: Text('Modalidade')),
                     DataColumn(label: Text('Referencial Nutricional')),
+                    DataColumn(label: Text('N° Refeições')),
+                    DataColumn(label: Text('Descrição')),
+                    DataColumn(label: Text('Editar')),
                     DataColumn(label: Text('Excluir')),
                   ],
                   rows: _controller.listarEscolas()
-                      .where((escola) =>
-                          escola.nome.contains(_pesquisaController.text))
+                      .where((escola) => escola.nome.contains(_pesquisaController.text))
                       .map((escola) {
                     return DataRow(cells: [
                       DataCell(Text(escola.nome)),
@@ -317,6 +342,14 @@ class _EscolaViewState extends State<EscolaView> {
                       DataCell(Text(escola.periodo)),
                       DataCell(Text(escola.modalidade)),
                       DataCell(Text(escola.referencialNutricional)),
+                      DataCell(Text(escola.nRefeicoesOfertados.toString())),
+                      DataCell(Text(escola.descricao)),
+                      DataCell(IconButton(
+                        icon: Icon(Icons.edit),
+                        onPressed: () {
+                          _editarEscola(escola);
+                        },
+                      )),
                       DataCell(IconButton(
                         icon: Icon(Icons.delete),
                         onPressed: () {

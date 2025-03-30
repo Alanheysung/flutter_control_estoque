@@ -10,10 +10,20 @@ class ReferenciasNutricionaisTela extends StatefulWidget {
 }
 
 class _ReferenciasNutricionaisTelaState
-    extends State<ReferenciasNutricionaisTela> {
+  extends State<ReferenciasNutricionaisTela> {
+
+
+    TextEditingController nomeController = TextEditingController();
+TextEditingController descricaoController = TextEditingController();
+TextEditingController nRefeicoesController = TextEditingController();
+TextEditingController faixaIdadeController = TextEditingController();
+TextEditingController periodoController = TextEditingController();
+
   final _formKey = GlobalKey<FormState>();
   final _nomeKey = GlobalKey<FormFieldState>();
   final _descricaoKey = GlobalKey<FormFieldState>();
+
+String _filtroPesquisa = ''; // Variável para armazenar o termo de pesquisa
 
   String? _numeroRefeicoes;
   String? _categoriaEnsino;
@@ -261,9 +271,25 @@ class _ReferenciasNutricionaisTelaState
                 ),
 
                 SizedBox(height: 20),
+// Campo de busca
+TextFormField(
+  decoration: InputDecoration(
+    labelText: 'Pesquisar',
+    prefixIcon: Icon(Icons.search),
+    border: OutlineInputBorder(),
+  ),
+  onChanged: (value) {
+    setState(() {
+      _filtroPesquisa = value;
+    });
+  },
+),
+SizedBox(height: 12),
 
                 // Tabela de referências nutricionais cadastradas
                 // Tabela de referências nutricionais cadastradas
+
+
                 DataTable(
                   columns: [
                     DataColumn(label: Text('Nome')),
@@ -274,7 +300,12 @@ class _ReferenciasNutricionaisTelaState
                     DataColumn(label: Text('Período')),
                     DataColumn(label: Text('Ações')), // Coluna de Ações (Botões)
                   ],
-                  rows: _referenciasCadastradas.map((referencia) {
+                  rows: _referenciasCadastradas
+    .where((referencia) =>
+        referencia.nome.toLowerCase().contains(_filtroPesquisa.toLowerCase()) ||
+        referencia.descricao.toLowerCase().contains(_filtroPesquisa.toLowerCase()))
+    .map((referencia) {
+
                     return DataRow(cells: [
                       DataCell(Text(referencia.nome)),
                       DataCell(Text(referencia.descricao)),
