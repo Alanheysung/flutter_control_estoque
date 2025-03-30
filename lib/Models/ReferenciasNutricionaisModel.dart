@@ -2,7 +2,7 @@ class ReferenciasNutricionais{
   final String nome;
   final String descricao;
   final int nRefeicoes;
-  final int faixaIdade;
+  final String faixaIdade;
   final String categoriaEnsino;
   final String periodo;
 

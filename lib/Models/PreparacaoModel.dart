@@ -1,6 +1,6 @@
 class Preparacao {
   final String nome;
-  final double medida;
+  final String medida;
   final double pcLiquido;
   final String grupo;
   final String fonteDeInformacoes;

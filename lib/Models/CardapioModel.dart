@@ -8,7 +8,7 @@ class Cardapio {
   final String tipoRefeicao;
   final String item;
   final String tipoItem;
-  final double unidadeMedida;
+  final String unidadeMedida;
 
   Cardapio({
     required this.unidadeMedida,

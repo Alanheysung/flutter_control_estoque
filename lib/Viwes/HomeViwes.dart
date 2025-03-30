@@ -41,7 +41,7 @@ class _HomeViewsState extends State<HomeViews> {
                   _buildButton('Escola', EscolaView(), Icons.school),
                   _buildButton('Cardápio', CadastrarCardapio(), Icons.restaurant_menu),
                   _buildButton('Referências Nutricionais', ReferenciasNutricionaisTela(), Icons.library_books),
-                  _buildButton('Preparação', PreparacaoPage(), Icons.kitchen),
+                  _buildButton('Preparação', PreparacaoView(), Icons.kitchen),
                   _buildButton('Alimentos', AlimentosScreen(), Icons.fastfood),
                   _buildButton('Refeição', RefeicoesPage(), Icons.restaurant),
                   _buildButton('Relatório', Relatorio(), Icons.analytics),

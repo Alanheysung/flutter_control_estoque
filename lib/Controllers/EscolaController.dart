@@ -12,7 +12,10 @@ class EscolaController {
     _escolas.add(escola);
     return true;
   }
-
+    
+  void removerEscola(int id) {
+    _escolas.removeWhere((escola) => escola.id == id);
+  }
   /*/// Remove escola pelo ID
   bool removerEscola(int id) {
     return _escolas.removeWhere((e) => e.id == id) > 0;

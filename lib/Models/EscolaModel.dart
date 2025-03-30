@@ -4,7 +4,7 @@ class Escola {
   final String endereco;
   final String telefone;
   final int capacidadeAlunos;
-  final int faixaIdade;
+  final String faixaIdade;
   final String periodo;
   final int nRefeicoesOfertados;
   final String modalidade;

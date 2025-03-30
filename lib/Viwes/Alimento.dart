@@ -14,21 +14,119 @@ class _AlimentosScreenState extends State<AlimentosScreen> {
   final TextEditingController _fonteController = TextEditingController();
   final TextEditingController _medidaController = TextEditingController();
   final TextEditingController _precoController = TextEditingController();
-  final TextEditingController _pesquisaController = TextEditingController();
-  final TextEditingController _precoMinController = TextEditingController();
-  final TextEditingController _precoMaxController = TextEditingController();
-  String _modoBusca = 'Todos';
   Alimentos? _alimentoEditando;
-
   List<Alimentos> _alimentosFiltrados = [];
+
+  String? _nomeErro;
+  String? _grupoErro;
+  String? _fonteErro;
+  String? _medidaErro;
+  String? _precoErro;
 
   @override
   void initState() {
     super.initState();
-    _alimentosFiltrados = _controller.listarAlimentos(); // Inicializa com todos os alimentos
+    _alimentosFiltrados = _controller.listarAlimentos();
+  }
+
+  void _limparCampos() {
+    _nomeController.clear();
+    _grupoController.clear();
+    _fonteController.clear();
+    _medidaController.clear();
+    _precoController.clear();
+    setState(() {
+      _alimentoEditando = null;
+    });
+  }
+
+  bool _validarCampos() {
+    bool valido = true;
+
+    if (_nomeController.text.isEmpty) {
+      setState(() {
+        _nomeErro = 'Nome não pode ser vazio';
+      });
+      valido = false;
+    } else {
+      setState(() {
+        _nomeErro = null;
+      });
+    }
+
+    if (_grupoController.text.isEmpty) {
+      setState(() {
+        _grupoErro = 'Grupo não pode ser vazio';
+      });
+      valido = false;
+    } else {
+      setState(() {
+        _grupoErro = null;
+      });
+    }
+
+    if (_fonteController.text.isEmpty) {
+      setState(() {
+        _fonteErro = 'Fonte não pode ser vazia';
+      });
+      valido = false;
+    } else {
+      setState(() {
+        _fonteErro = null;
+      });
+    }
+
+    if (_medidaController.text.isEmpty || double.tryParse(_medidaController.text) == null) {
+      setState(() {
+        _medidaErro = 'Medida deve ser um número válido';
+      });
+      valido = false;
+    } else {
+      setState(() {
+        _medidaErro = null;
+      });
+    }
+
+    if (_precoController.text.isEmpty || double.tryParse(_precoController.text) == null) {
+      setState(() {
+        _precoErro = 'Preço deve ser um número válido';
+      });
+      valido = false;
+    } else {
+      setState(() {
+        _precoErro = null;
+      });
+    }
+
+    return valido;
+  }
+
+  void _mostrarConfirmacaoRemocao(String nome) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Confirmar Remoção'),
+        content: Text('Tem certeza que deseja excluir "$nome"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              _removerAlimento(nome);
+              Navigator.of(context).pop();
+            },
+            child: Text('Excluir'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _adicionarAlimento() {
+    if (!_validarCampos()) return;
+
     final alimento = Alimentos(
       nome: _nomeController.text,
       grupo: _grupoController.text,
@@ -40,9 +138,9 @@ class _AlimentosScreenState extends State<AlimentosScreen> {
     bool sucesso = _controller.adicionarAlimento(alimento);
     if (sucesso) {
       setState(() {
-        _limparCampos();
-        _alimentosFiltrados = _controller.listarAlimentos(); // Atualiza a lista após adicionar
+        _alimentosFiltrados = _controller.listarAlimentos();
       });
+      _limparCampos();
     } else {
       _mostrarMensagemErro('Alimento já existe.');
     }
@@ -52,14 +150,14 @@ class _AlimentosScreenState extends State<AlimentosScreen> {
     bool sucesso = _controller.removerAlimento(nome);
     if (sucesso) {
       setState(() {
-        _alimentosFiltrados = _controller.listarAlimentos(); // Atualiza a lista após remoção
+        _alimentosFiltrados = _controller.listarAlimentos();
       });
-    } else {
-      _mostrarMensagemErro('Alimento não encontrado.');
     }
   }
 
   void _atualizarAlimento() {
+    if (!_validarCampos()) return;
+
     if (_alimentoEditando != null) {
       final alimentoAtualizado = Alimentos(
         nome: _nomeController.text,
@@ -72,10 +170,9 @@ class _AlimentosScreenState extends State<AlimentosScreen> {
       bool sucesso = _controller.atualizarAlimento(_alimentoEditando!.nome, alimentoAtualizado);
       if (sucesso) {
         setState(() {
-          _limparCampos();
-          _alimentoEditando = null;
-          _alimentosFiltrados = _controller.listarAlimentos(); // Atualiza a lista após atualização
+          _alimentosFiltrados = _controller.listarAlimentos();
         });
+        _limparCampos();
       } else {
         _mostrarMensagemErro('Erro ao atualizar alimento.');
       }
@@ -91,74 +188,6 @@ class _AlimentosScreenState extends State<AlimentosScreen> {
       _medidaController.text = alimento.medidaBase.toString();
       _precoController.text = alimento.preco.toString();
     });
-  }
-
-  void _buscarAlimento() {
-    final alimento = _controller.buscarAlimento(_pesquisaController.text);
-    if (alimento != null) {
-      setState(() {
-        _alimentoEditando = alimento;
-        _nomeController.text = alimento.nome;
-        _grupoController.text = alimento.grupo;
-        _fonteController.text = alimento.fonteDeInformacoes;
-        _medidaController.text = alimento.medidaBase.toString();
-        _precoController.text = alimento.preco.toString();
-      });
-    } else {
-      _mostrarMensagemErro('Alimento não encontrado.');
-    }
-  }
-
-  
-void _filtrarAlimentos() {
-  List<Alimentos> alimentosFiltradosTemp = [];
-
-  if (_modoBusca == 'Por Nome') {
-    final alimento = _controller.buscarAlimento(_pesquisaController.text);
-    if (alimento != null) {
-      alimentosFiltradosTemp.add(alimento);
-    }
-  } else if (_modoBusca == 'Por Grupo') {
-    alimentosFiltradosTemp = _controller.filtrarPorGrupo(_pesquisaController.text);
-  } else if (_modoBusca == 'Por Preço') {
-    double precoMax = double.tryParse(_precoMaxController.text) ?? -1;
-    
-    if (precoMax > 0) {
-      alimentosFiltradosTemp = _controller.filtrarPorPrecoMaximo(precoMax);
-    } else {
-      _mostrarMensagemErro('Por favor, insira um preço válido.');
-      return;
-    }
-  } else if (_modoBusca == 'Faixa de Preço') {
-    double precoMin = double.tryParse(_precoMinController.text) ?? -1;
-    double precoMax = double.tryParse(_precoMaxController.text) ?? -1;
-
-    if (precoMin >= 0 && precoMax > precoMin) {
-      alimentosFiltradosTemp = _controller.filtrarPorFaixaPreco(precoMin, precoMax);
-    } else {
-      _mostrarMensagemErro('Por favor, insira uma faixa de preço válida.');
-    }
-}
- else {
-    alimentosFiltradosTemp = _controller.listarAlimentos();
-  }
-
-  setState(() {
-    _alimentosFiltrados = alimentosFiltradosTemp;
-  });
-}
-
-
-
-  void _limparCampos() {
-    _nomeController.clear();
-    _grupoController.clear();
-    _fonteController.clear();
-    _medidaController.clear();
-    _precoController.clear();
-    _pesquisaController.clear();
-    _precoMinController.clear();
-    _precoMaxController.clear();
   }
 
   void _mostrarMensagemErro(String mensagem) {
@@ -190,82 +219,109 @@ void _filtrarAlimentos() {
               flex: 2,
               child: Column(
                 children: [
-                  TextField(controller: _nomeController, decoration: InputDecoration(labelText: 'Nome')),
-                  TextField(controller: _grupoController, decoration: InputDecoration(labelText: 'Grupo')),
-                  TextField(controller: _fonteController, decoration: InputDecoration(labelText: 'Fonte de Informação')),
-                  TextField(controller: _medidaController, decoration: InputDecoration(labelText: 'Medida Base'), keyboardType: TextInputType.number),
-                  TextField(controller: _precoController, decoration: InputDecoration(labelText: 'Preço'), keyboardType: TextInputType.number),
-                  SizedBox(height: 10),
-                  ElevatedButton(onPressed: _adicionarAlimento, child: Text('Adicionar Alimento')),
-                  if (_alimentoEditando != null)
-                    ElevatedButton(onPressed: _atualizarAlimento, child: Text('Atualizar Alimento')),
+                  Container(
+                    padding: EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          TextField(
+                            controller: _nomeController,
+                            decoration: InputDecoration(
+                              labelText: 'Nome',
+                              errorText: _nomeErro,
+                            ),
+                          ),
+                          TextField(
+                            controller: _grupoController,
+                            decoration: InputDecoration(
+                              labelText: 'Grupo',
+                              errorText: _grupoErro,
+                            ),
+                          ),
+                          TextField(
+                            controller: _fonteController,
+                            decoration: InputDecoration(
+                              labelText: 'Fonte de Informações',
+                              errorText: _fonteErro,
+                            ),
+                          ),
+                          TextField(
+                            controller: _medidaController,
+                            decoration: InputDecoration(
+                              labelText: 'Medida',
+                              errorText: _medidaErro,
+                            ),
+                          ),
+                          TextField(
+                            controller: _precoController,
+                            decoration: InputDecoration(
+                              labelText: 'Preço',
+                              errorText: _precoErro,
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: _alimentoEditando == null
+                                ? _adicionarAlimento
+                                : _atualizarAlimento,
+                            child: Text(_alimentoEditando == null
+                                ? 'Salvar'
+                                : 'Atualizar'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            SizedBox(width: 20),
+            SizedBox(width: 16),
             Expanded(
               flex: 3,
               child: Column(
                 children: [
-                  DropdownButton<String>(
-                    value: _modoBusca,
-                    onChanged: (String? novoValor) {
-                      setState(() {
-                        _modoBusca = novoValor!;
-                        _pesquisaController.clear();
-                        
-                        // Se o usuário selecionar "Todos", exibir a lista completa
-                        if (_modoBusca == 'Todos') {
-                          _alimentosFiltrados = _controller.listarAlimentos();
-                        }
-                      });
-                    },
-                    items: ['Todos', 'Por Nome', 'Por Grupo', 'Por Preço', 'Faixa de Preço']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                  if (_modoBusca == 'Por Nome')
-                    Column(
-                      children: [
-                        TextField(controller: _pesquisaController, decoration: InputDecoration(labelText: 'Nome do Alimento')),
-                        ElevatedButton(onPressed: _filtrarAlimentos, child: Text('Buscar')),
-                      ],
-                    ),
-                  if (_modoBusca == 'Por Grupo' || _modoBusca == 'Por Preço' || _modoBusca == 'Faixa de Preço')
-                    Column(
-                      children: [
-                        TextField(controller: _pesquisaController, decoration: InputDecoration(labelText: 'Pesquisa')),
-                        ElevatedButton(onPressed: _filtrarAlimentos, child: Text('Filtrar')),
-                      ],
-                    ),
-                    
                   Expanded(
-                    child: ListView.builder(
-                      itemCount: _alimentosFiltrados.length,
-                      itemBuilder: (context, index) {
-                        final alimento = _alimentosFiltrados[index];
-                        return ListTile(
-                          title: Text(alimento.nome),
-                          subtitle: Text('Grupo: ${alimento.grupo}, Preço: R\$${alimento.preco}'),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () => _preencherCamposParaEdicao(alimento),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () => _removerAlimento(alimento.nome),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columns: [
+                          DataColumn(label: Text('Nome')),
+                          DataColumn(label: Text('Grupo')),
+                          DataColumn(label: Text('Fonte')),
+                          DataColumn(label: Text('Medida')),
+                          DataColumn(label: Text('Preço')),
+                          DataColumn(label: Text('Ações')),
+                        ],
+                        rows: _alimentosFiltrados.map((alimento) {
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(alimento.nome)),
+                              DataCell(Text(alimento.grupo)),
+                              DataCell(Text(alimento.fonteDeInformacoes)),
+                              DataCell(Text(alimento.medidaBase.toString())),
+                              DataCell(Text('R\$${alimento.preco.toStringAsFixed(2)}')),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: Icon(Icons.edit),
+                                      onPressed: () => _preencherCamposParaEdicao(alimento),
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.delete),
+                                      onPressed: () => _mostrarConfirmacaoRemocao(alimento.nome),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ],
-                          ),
-                        );
-                      },
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
                 ],

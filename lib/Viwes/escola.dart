@@ -9,6 +9,8 @@ class EscolaView extends StatefulWidget {
 
 class _EscolaViewState extends State<EscolaView> {
   final EscolaController _controller = EscolaController();
+  final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _enderecoController = TextEditingController();
   final TextEditingController _telefoneController = TextEditingController();
@@ -30,109 +32,30 @@ class _EscolaViewState extends State<EscolaView> {
   final List<int> _nRefeicoes = [1, 2, 3, 4];
 
   void _adicionarEscola() {
-    if (_nomeController.text.isEmpty ||
-        _enderecoController.text.isEmpty ||
-        _telefoneController.text.isEmpty ||
-        _capacidadeController.text.isEmpty ||
-        _faixaIdadeController.text.isEmpty ||
-        _periodoSelecionado == null ||
-        _modalidadeSelecionada == null ||
-        _referencialNutricionalSelecionado == null ||
-        _nRefeicoesSelecionado == null ||
-        _descricaoController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Todos os campos devem ser preenchidos!')),
+    if (_formKey.currentState!.validate()) {
+      final escola = Escola(
+        id: DateTime.now().millisecondsSinceEpoch,
+        nome: _nomeController.text,
+        endereco: _enderecoController.text,
+        telefone: _telefoneController.text,
+        capacidadeAlunos: int.parse(_capacidadeController.text),
+        faixaIdade: _faixaIdadeController.text,
+        periodo: _periodoSelecionado!,
+        nRefeicoesOfertados: _nRefeicoesSelecionado!,
+        modalidade: _modalidadeSelecionada!,
+        descricao: _descricaoController.text,
+        referencialNutricional: _referencialNutricionalSelecionado!,
       );
-      return;
-    }
 
-    final escola = Escola(
-      id: DateTime.now().millisecondsSinceEpoch,
-      nome: _nomeController.text,
-      endereco: _enderecoController.text,
-      telefone: _telefoneController.text,
-      capacidadeAlunos: int.parse(_capacidadeController.text),
-      faixaIdade: int.parse(_faixaIdadeController.text),
-      periodo: _periodoSelecionado!,
-      nRefeicoesOfertados: _nRefeicoesSelecionado!,
-      modalidade: _modalidadeSelecionada!,
-      descricao: _descricaoController.text,
-      referencialNutricional: _referencialNutricionalSelecionado!,
-    );
+      _controller.adicionarEscola(escola);
 
-    if (_controller.adicionarEscola(escola)) {
       setState(() {});
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Escola adicionada com sucesso!')),
       );
-      _limparCampos(); // Limpa os campos após salvar
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao adicionar escola. ID já existente.')),
-      );
+      _limparCampos();
     }
-  }
-
-  void _atualizarEscola() {
-    if (_idEscolaAtualizar == null) return;
-
-    if (_nomeController.text.isEmpty ||
-        _enderecoController.text.isEmpty ||
-        _telefoneController.text.isEmpty ||
-        _capacidadeController.text.isEmpty ||
-        _faixaIdadeController.text.isEmpty ||
-        _periodoSelecionado == null ||
-        _modalidadeSelecionada == null ||
-        _referencialNutricionalSelecionado == null ||
-        _nRefeicoesSelecionado == null ||
-        _descricaoController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Todos os campos devem ser preenchidos!')),
-      );
-      return;
-    }
-
-    final escolaAtualizada = Escola(
-      id: _idEscolaAtualizar!,
-      nome: _nomeController.text,
-      endereco: _enderecoController.text,
-      telefone: _telefoneController.text,
-      capacidadeAlunos: int.parse(_capacidadeController.text),
-      faixaIdade: int.parse(_faixaIdadeController.text),
-      periodo: _periodoSelecionado!,
-      nRefeicoesOfertados: _nRefeicoesSelecionado!,
-      modalidade: _modalidadeSelecionada!,
-      descricao: _descricaoController.text,
-      referencialNutricional: _referencialNutricionalSelecionado!,
-    );
-
-    if (_controller.atualizarEscola(_idEscolaAtualizar!, escolaAtualizada)) {
-      setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Escola atualizada com sucesso!')),
-      );
-      _limparCampos(); // Limpa os campos após atualizar
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar escola.')),
-      );
-    }
-  }
-
-  void _editarEscola(Escola escola) {
-    setState(() {
-      _nomeController.text = escola.nome;
-      _enderecoController.text = escola.endereco;
-      _telefoneController.text = escola.telefone;
-      _capacidadeController.text = escola.capacidadeAlunos.toString();
-      _faixaIdadeController.text = escola.faixaIdade.toString();
-      _periodoSelecionado = escola.periodo;
-      _modalidadeSelecionada = escola.modalidade;
-      _referencialNutricionalSelecionado = escola.referencialNutricional;
-      _nRefeicoesSelecionado = escola.nRefeicoesOfertados;
-      _descricaoController.text = escola.descricao;
-      _idEscolaAtualizar = escola.id;
-    });
   }
 
   void _limparCampos() {
@@ -152,139 +75,260 @@ class _EscolaViewState extends State<EscolaView> {
     });
   }
 
+  void _removerEscola(int id) {
+    _controller.removerEscola(id);
+    setState(() {});
+  }
+
+  Future<void> _confirmarRemocao(int id) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false, // Não permite fechar clicando fora do diálogo
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar exclusão'),
+          content: Text('Você tem certeza que deseja excluir essa escola?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('Excluir'),
+              onPressed: () {
+                _removerEscola(id);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Gerenciar Escolas')),
       body: Padding(
         padding: EdgeInsets.all(16.0),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 1,
-              child: Column(
-                children: [
-                  TextField(controller: _nomeController, decoration: InputDecoration(labelText: 'Nome')),
-                  TextField(controller: _enderecoController, decoration: InputDecoration(labelText: 'Endereço')),
-                  TextField(controller: _telefoneController, decoration: InputDecoration(labelText: 'Telefone')),
-                  TextField(controller: _capacidadeController, decoration: InputDecoration(labelText: 'Capacidade de alunos'), keyboardType: TextInputType.number),
-                  TextField(controller: _faixaIdadeController, decoration: InputDecoration(labelText: 'Faixa de idade'), keyboardType: TextInputType.number),
-                  DropdownButtonFormField(
-                    value: _periodoSelecionado,
-                    items: _periodos.map((String periodo) {
-                      return DropdownMenuItem(value: periodo, child: Text(periodo));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _periodoSelecionado = value as String?;
-                      });
-                    },
-                    decoration: InputDecoration(labelText: 'Período'),
-                  ),
-                  DropdownButtonFormField(
-                    value: _modalidadeSelecionada,
-                    items: _modalidades.map((String modalidade) {
-                      return DropdownMenuItem(value: modalidade, child: Text(modalidade));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _modalidadeSelecionada = value as String?;
-                      });
-                    },
-                    decoration: InputDecoration(labelText: 'Modalidade'),
-                  ),
-                  DropdownButtonFormField(
-                    value: _referencialNutricionalSelecionado,
-                    items: _referenciaisNutricionais.map((String refNutri) {
-                      return DropdownMenuItem(value: refNutri, child: Text(refNutri));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _referencialNutricionalSelecionado = value as String?;
-                      });
-                    },
-                    decoration: InputDecoration(labelText: 'Referencial Nutricional'),
-                  ),
-                  DropdownButtonFormField(
-                    value: _nRefeicoesSelecionado,
-                    items: _nRefeicoes.map((int refeicao) {
-                      return DropdownMenuItem(value: refeicao, child: Text('$refeicao'));
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _nRefeicoesSelecionado = value as int?;
-                      });
-                    },
-                    decoration: InputDecoration(labelText: 'N° Refeições'),
-                  ),
-                  TextField(controller: _descricaoController, decoration: InputDecoration(labelText: 'Descrição')),
-                  SizedBox(height: 16),
-                  Row(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Formulário de cadastro
+              Container(
+                padding: EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.blue),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                     children: [
+                      TextFormField(
+                        controller: _nomeController,
+                        decoration: InputDecoration(labelText: 'Nome'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _enderecoController,
+                        decoration: InputDecoration(labelText: 'Endereço'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _telefoneController,
+                        decoration: InputDecoration(labelText: 'Telefone'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          if (!RegExp(r'^\d{10,11}$').hasMatch(value)) {
+                            return 'Telefone inválido';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _capacidadeController,
+                        decoration: InputDecoration(labelText: 'Capacidade de alunos'),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Capacidade inválida';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _faixaIdadeController,
+                        decoration: InputDecoration(labelText: 'Faixa de idade'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;  // Permite qualquer string
+                        },
+                      ),
+
+                      DropdownButtonFormField(
+                        value: _periodoSelecionado,
+                        items: _periodos.map((String periodo) {
+                          return DropdownMenuItem(value: periodo, child: Text(periodo));
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _periodoSelecionado = value as String?;
+                          });
+                        },
+                        decoration: InputDecoration(labelText: 'Período'),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      DropdownButtonFormField(
+                        value: _modalidadeSelecionada,
+                        items: _modalidades.map((String modalidade) {
+                          return DropdownMenuItem(value: modalidade, child: Text(modalidade));
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _modalidadeSelecionada = value as String?;
+                          });
+                        },
+                        decoration: InputDecoration(labelText: 'Modalidade'),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      DropdownButtonFormField(
+                        value: _referencialNutricionalSelecionado,
+                        items: _referenciaisNutricionais.map((String refNutri) {
+                          return DropdownMenuItem(value: refNutri, child: Text(refNutri));
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _referencialNutricionalSelecionado = value as String?;
+                          });
+                        },
+                        decoration: InputDecoration(labelText: 'Referencial Nutricional'),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      DropdownButtonFormField(
+                        value: _nRefeicoesSelecionado,
+                        items: _nRefeicoes.map((int refeicao) {
+                          return DropdownMenuItem(value: refeicao, child: Text('$refeicao'));
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _nRefeicoesSelecionado = value as int?;
+                          });
+                        },
+                        decoration: InputDecoration(labelText: 'N° Refeições'),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        controller: _descricaoController,
+                        decoration: InputDecoration(labelText: 'Descrição'),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Campo obrigatório';
+                          }
+                          return null;
+                        },
+                      ),
+                      SizedBox(height: 16),
                       ElevatedButton(
                         onPressed: _adicionarEscola,
-                        child: Text('Salvar'),
-                      ),
-                      SizedBox(width: 10),
-                      ElevatedButton(
-                        onPressed: _atualizarEscola,
-                        child: Text('Alterar'),
+                        child: Text('Adicionar Escola'),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _pesquisaController,
-                    decoration: InputDecoration(
-                      labelText: 'Pesquisar',
-                      suffixIcon: Icon(Icons.search),
-                    ),
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columns: [
-                          DataColumn(label: Text('Nome')),
-                          DataColumn(label: Text('Endereço')),
-                          DataColumn(label: Text('Telefone')),
-                          DataColumn(label: Text('Capacidade')),
-                          DataColumn(label: Text('Modalidade')),
-                          DataColumn(label: Text('Ações')),
-                        ],
-                        rows: _controller.listarEscolas()
-                            .where((escola) => escola.nome.toLowerCase().contains(_pesquisaController.text.toLowerCase()))
-                            .map((escola) {
-                          return DataRow(cells: [
-                            DataCell(Text(escola.nome)),
-                            DataCell(Text(escola.endereco)),
-                            DataCell(Text(escola.telefone)),
-                            DataCell(Text(escola.capacidadeAlunos.toString())),
-                            DataCell(Text(escola.modalidade)),
-                            DataCell(
-                              IconButton(
-                                icon: Icon(Icons.edit),
-                                onPressed: () => _editarEscola(escola),
-                              ),
-                            ),
-                          ]);
-                        }).toList(),
-                      ),
-                    ),
-                  ),
-                ],
+              SizedBox(height: 20),
+              // Tabela de escolas
+              TextField(
+                controller: _pesquisaController,
+                decoration: InputDecoration(
+                  labelText: 'Pesquisar',
+                  suffixIcon: Icon(Icons.search),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                },
               ),
-            ),
-          ],
+              SizedBox(height: 20),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: [
+                    DataColumn(label: Text('Nome')),
+                    DataColumn(label: Text('Endereço')),
+                    DataColumn(label: Text('Telefone')),
+                    DataColumn(label: Text('Capacidade')),
+                    DataColumn(label: Text('Faixa de Idade')),
+                    DataColumn(label: Text('Período')),
+                    DataColumn(label: Text('Modalidade')),
+                    DataColumn(label: Text('Referencial Nutricional')),
+                    DataColumn(label: Text('Excluir')),
+                  ],
+                  rows: _controller.listarEscolas()
+                      .where((escola) =>
+                          escola.nome.contains(_pesquisaController.text))
+                      .map((escola) {
+                    return DataRow(cells: [
+                      DataCell(Text(escola.nome)),
+                      DataCell(Text(escola.endereco)),
+                      DataCell(Text(escola.telefone)),
+                      DataCell(Text(escola.capacidadeAlunos.toString())),
+                      DataCell(Text(escola.faixaIdade)),
+                      DataCell(Text(escola.periodo)),
+                      DataCell(Text(escola.modalidade)),
+                      DataCell(Text(escola.referencialNutricional)),
+                      DataCell(IconButton(
+                        icon: Icon(Icons.delete),
+                        onPressed: () {
+                          _confirmarRemocao(escola.id);
+                        },
+                      )),
+                    ]);
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
